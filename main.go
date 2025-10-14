@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 	"strings"
+
+	"github.com/Israel-Andrade-P/pokedex-in-go.git/api"
 )
 
 type cliCommand struct {
@@ -28,10 +30,14 @@ func main() {
 			description: "Displays a help message",
 			callback:    helpCommand,
 		},
+		"map": {
+			name:        "map",
+			description: "Displays available locations",
+			callback:    mapCommand,
+		},
 	}
 
 	sc := bufio.NewScanner(os.Stdin)
-	//Drop the step by step again on ChatGPT to clear things up
 
 	for {
 		fmt.Print("Pokedex > ")
@@ -78,5 +84,16 @@ func helpCommand() error {
 		fmt.Printf("%s: %s\n", key, val.description)
 	}
 
+	return nil
+}
+
+func mapCommand() error {
+	locations, err := api.GetPokeLocations()
+	if err != nil {
+		return err
+	}
+	for _, location := range locations {
+		fmt.Println(location)
+	}
 	return nil
 }
