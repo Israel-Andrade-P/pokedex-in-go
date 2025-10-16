@@ -49,17 +49,9 @@ func main() {
 		},
 	}
 
-	url := "https://pokeapi.co/api/v2/location/"
-	var err error
-
-	locationResp, err = api.GetPokeLocations(url)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	cfg := &config{
-		next:     locationResp.Next,
-		previous: locationResp.Previous,
+		next:     "https://pokeapi.co/api/v2/location/",
+		previous: "",
 	}
 
 	sc := bufio.NewScanner(os.Stdin)
@@ -114,14 +106,17 @@ func helpCommand(cfg *config) error {
 }
 
 func mapCommand(cfg *config) error {
+	var err error
+
+	locationResp, err = api.GetPokeLocations(cfg.next)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	for _, location := range getLocationNames(locationResp) {
 		fmt.Println(location)
 	}
-	var err error
-	locationResp, err = api.GetPokeLocations(cfg.next)
-	if err != nil {
-		return err
-	}
+
 	cfg.next = locationResp.Next
 	cfg.previous = locationResp.Previous
 
