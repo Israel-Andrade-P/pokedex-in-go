@@ -23,8 +23,6 @@ type cliCommand struct {
 
 var commands map[string]cliCommand
 
-var locationResp api.LocationResponse
-
 func main() {
 	commands = map[string]cliCommand{
 		"exit": {
@@ -50,7 +48,7 @@ func main() {
 	}
 
 	cfg := &config{
-		next:     "https://pokeapi.co/api/v2/location/",
+		next:     "https://pokeapi.co/api/v2/location-area?limit=20",
 		previous: "",
 	}
 
@@ -106,9 +104,7 @@ func helpCommand(cfg *config) error {
 }
 
 func mapCommand(cfg *config) error {
-	var err error
-
-	locationResp, err = api.GetPokeLocations(cfg.next)
+	locationResp, err := api.GetPokeLocations(cfg.next)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -128,8 +124,7 @@ func mapbCommand(cfg *config) error {
 		fmt.Println("you're on the first page.")
 		return nil
 	}
-	var err error
-	locationResp, err = api.GetPokeLocations(cfg.previous)
+	locationResp, err := api.GetPokeLocations(cfg.previous)
 	if err != nil {
 		return err
 	}
