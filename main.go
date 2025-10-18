@@ -2,12 +2,15 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/Israel-Andrade-P/pokedex-in-go.git/api"
+	"github.com/Israel-Andrade-P/pokedex-in-go.git/pokecache"
 )
 
 type config struct {
@@ -22,6 +25,8 @@ type cliCommand struct {
 }
 
 var commands map[string]cliCommand
+
+var cache *pokecache.Cache
 
 func main() {
 	commands = map[string]cliCommand{
@@ -51,6 +56,8 @@ func main() {
 		next:     "https://pokeapi.co/api/v2/location-area?limit=20",
 		previous: "",
 	}
+
+	cache = pokecache.NewCache(time.Second * 5)
 
 	sc := bufio.NewScanner(os.Stdin)
 
@@ -104,9 +111,25 @@ func helpCommand(cfg *config) error {
 }
 
 func mapCommand(cfg *config) error {
-	locationResp, err := api.GetPokeLocations(cfg.next)
-	if err != nil {
-		log.Fatal(err)
+	var locationResp api.LocationResponse
+	var err error
+	cachedData, exists := cache.Get(cfg.next)
+	if exists {
+		err = json.Unmarshal(cachedData, &locationResp)
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		locationResp, err = api.GetPokeLocations(cfg.next)
+		if err != nil {
+			log.Fatal(err)
+		}
+		var data []byte
+		data, err = json.Marshal(locationResp)
+		if err != nil {
+			log.Fatal(err)
+		}
+		cache.Add(cfg.next, data)
 	}
 
 	for _, location := range getLocationNames(locationResp) {
@@ -124,9 +147,25 @@ func mapbCommand(cfg *config) error {
 		fmt.Println("you're on the first page.")
 		return nil
 	}
-	locationResp, err := api.GetPokeLocations(cfg.previous)
-	if err != nil {
-		return err
+	var locationResp api.LocationResponse
+	var err error
+	cachedData, exists := cache.Get(cfg.previous)
+	if exists {
+		err = json.Unmarshal(cachedData, &locationResp)
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		locationResp, err = api.GetPokeLocations(cfg.previous)
+		if err != nil {
+			log.Fatal(err)
+		}
+		var data []byte
+		data, err = json.Marshal(locationResp)
+		if err != nil {
+			log.Fatal(err)
+		}
+		cache.Add(cfg.previous, data)
 	}
 
 	for _, location := range getLocationNames(locationResp) {
