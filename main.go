@@ -21,7 +21,7 @@ type config struct {
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(*config) error
+	callback    func(*config, string) error
 }
 
 var commands map[string]cliCommand
@@ -50,6 +50,11 @@ func main() {
 			description: "Displays the previous locations page",
 			callback:    mapbCommand,
 		},
+		"explore": {
+			name:        "explore",
+			description: "Lists pokemon names of a certain location. Accepts a parameter location name.\nEx: explore <location>",
+			callback:    exploreCommand,
+		},
 	}
 
 	cfg := &config{
@@ -57,7 +62,7 @@ func main() {
 		previous: "",
 	}
 
-	cache = pokecache.NewCache(time.Second * 5)
+	cache = pokecache.NewCache(time.Second * 10)
 
 	sc := bufio.NewScanner(os.Stdin)
 
@@ -76,12 +81,16 @@ func main() {
 		}
 
 		validCommand := false
+		var parameter string
 
 		for key, val := range commands {
 			if words[0] == key {
 				validCommand = true
-				if err := val.callback(cfg); err != nil {
-					log.Fatalf("Error has occurred: ERR %v", err)
+				if len(words) > 1 {
+					parameter = cleanParameter(words[1:])
+				}
+				if err := val.callback(cfg, parameter); err != nil {
+					log.Fatal(err)
 				}
 			}
 		}
@@ -95,13 +104,20 @@ func cleanInput(text string) []string {
 	return strings.Fields(strings.ToLower(text))
 }
 
-func commandExit(cfg *config) error {
+func cleanParameter(words []string) string {
+	if len(words) == 1 {
+		return strings.ToLower(words[0])
+	}
+	return strings.ToLower(strings.Join(words, "-"))
+}
+
+func commandExit(cfg *config, parameter string) error {
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
 }
 
-func helpCommand(cfg *config) error {
+func helpCommand(cfg *config, parameter string) error {
 	fmt.Println("Welcome to the Pokedex!\nUsage:")
 	for key, val := range commands {
 		fmt.Printf("%s: %s\n", key, val.description)
@@ -110,7 +126,7 @@ func helpCommand(cfg *config) error {
 	return nil
 }
 
-func mapCommand(cfg *config) error {
+func mapCommand(cfg *config, parameter string) error {
 	var locationResp api.LocationResponse
 	var err error
 	cachedData, exists := cache.Get(cfg.next)
@@ -142,7 +158,7 @@ func mapCommand(cfg *config) error {
 	return nil
 }
 
-func mapbCommand(cfg *config) error {
+func mapbCommand(cfg *config, parameter string) error {
 	if cfg.previous == "" {
 		fmt.Println("you're on the first page.")
 		return nil
@@ -175,6 +191,34 @@ func mapbCommand(cfg *config) error {
 	cfg.next = locationResp.Next
 	cfg.previous = locationResp.Previous
 
+	return nil
+}
+
+func exploreCommand(cfg *config, parameter string) error {
+	var pokeNames []string
+	url := fmt.Sprintf("https://pokeapi.co/api/v2/location-area/%s", parameter)
+	cachedData, exists := cache.Get(url)
+	if exists {
+		err := json.Unmarshal(cachedData, &pokeNames)
+		if err != nil {
+			return err
+		}
+	} else {
+		var err error
+		pokeNames, err = api.GetPokemons(url)
+		if err != nil {
+			return err
+		}
+		data, err := json.Marshal(pokeNames)
+		if err != nil {
+			return err
+		}
+		cache.Add(url, data)
+	}
+
+	for _, name := range pokeNames {
+		fmt.Println(name)
+	}
 	return nil
 }
 

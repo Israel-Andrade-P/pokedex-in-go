@@ -18,7 +18,7 @@ type (
 	}
 )
 
-func getPokemons(url string) ([]Pokemon, error) {
+func GetPokemons(url string) ([]string, error) {
 	var pokemonList PokemonList
 
 	res, err := http.Get(url)
@@ -30,17 +30,17 @@ func getPokemons(url string) ([]Pokemon, error) {
 
 	err = json.NewDecoder(res.Body).Decode(&pokemonList)
 	if err != nil {
-		return nil, fmt.Errorf("error has occurred: ERR- %v", err)
+		return nil, fmt.Errorf("error has occurred: ERR- invalid %v", err)
 	}
 
 	return extractPokemons(pokemonList), nil
 }
 
-func extractPokemons(pokeList PokemonList) []Pokemon {
-	pokemons := make([]Pokemon, 0)
+func extractPokemons(pokeList PokemonList) []string {
+	pokemonNames := make([]string, 0)
 
 	for _, encounter := range pokeList.PokemonEncounters {
-		pokemons = append(pokemons, encounter.Pokemon)
+		pokemonNames = append(pokemonNames, encounter.Pokemon.Name)
 	}
-	return pokemons
+	return pokemonNames
 }
