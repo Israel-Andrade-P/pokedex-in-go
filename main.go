@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"strings"
 	"time"
@@ -54,6 +55,11 @@ func main() {
 			name:        "explore",
 			description: "Lists pokemon names of a certain location. Accepts a parameter location name.\nEx: explore <location>",
 			callback:    exploreCommand,
+		},
+		"catch": {
+			name:        "catch",
+			description: "Attempts catching a specific Pokemon.\nEx: catch <pokemon>",
+			callback:    catchCommand,
 		},
 	}
 
@@ -133,17 +139,17 @@ func mapCommand(cfg *config, parameter string) error {
 	if exists {
 		err = json.Unmarshal(cachedData, &locationResp)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 	} else {
 		locationResp, err = api.GetPokeLocations(cfg.next)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		var data []byte
 		data, err = json.Marshal(locationResp)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		cache.Add(cfg.next, data)
 	}
@@ -169,17 +175,17 @@ func mapbCommand(cfg *config, parameter string) error {
 	if exists {
 		err = json.Unmarshal(cachedData, &locationResp)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 	} else {
 		locationResp, err = api.GetPokeLocations(cfg.previous)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		var data []byte
 		data, err = json.Marshal(locationResp)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		cache.Add(cfg.previous, data)
 	}
@@ -220,6 +226,34 @@ func exploreCommand(cfg *config, parameter string) error {
 		fmt.Println(name)
 	}
 	return nil
+}
+
+func catchCommand(cfg *config, parameter string) error {
+	fmt.Printf("Throwing a pokeball at %s\n", parameter)
+	url := fmt.Sprintf("https://pokeapi.co/api/v2/pokemon/%s", parameter)
+	cachedData, exists := cache.Get(url)
+	var pokeExp int
+	if exists {
+		if err := json.Unmarshal(cachedData, &pokeExp); err != nil {
+			return err
+		}
+	} else {
+		var err error
+		pokeExp, err = api.GetPokeInfo(url)
+		if err != nil {
+			return err
+		}
+		data, err := json.Marshal(pokeExp)
+		cache.Add(url, data)
+	}
+	catchOrFail(pokeExp)
+}
+
+func catchOrFail(baseExp int) {
+	prob := (rand.Intn(baseExp) + 1)
+	if prob >= 50 {
+		fmt.Println("Caught")
+	}
 }
 
 func getLocationNames(locationResp api.LocationResponse) []string {
