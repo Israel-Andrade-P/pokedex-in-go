@@ -12,6 +12,7 @@ import (
 
 	"github.com/Israel-Andrade-P/pokedex-in-go.git/api"
 	"github.com/Israel-Andrade-P/pokedex-in-go.git/pokecache"
+	"github.com/Israel-Andrade-P/pokedex-in-go.git/pokedex"
 )
 
 type config struct {
@@ -26,6 +27,8 @@ type cliCommand struct {
 }
 
 var commands map[string]cliCommand
+
+var myPokedex pokedex.Pokedex
 
 var cache *pokecache.Cache
 
@@ -61,12 +64,19 @@ func main() {
 			description: "Attempts catching a specific Pokemon.\nEx: catch <pokemon>",
 			callback:    catchCommand,
 		},
+		"check": {
+			name:        "check",
+			description: "Checks Pokedex",
+			callback:    checkCommand,
+		},
 	}
 
 	cfg := &config{
 		next:     "https://pokeapi.co/api/v2/location-area?limit=20",
 		previous: "",
 	}
+
+	myPokedex = pokedex.NewPokedex()
 
 	cache = pokecache.NewCache(time.Second * 10)
 
@@ -244,16 +254,28 @@ func catchCommand(cfg *config, parameter string) error {
 			return err
 		}
 		data, err := json.Marshal(pokeExp)
+		if err != nil {
+			return err
+		}
 		cache.Add(url, data)
 	}
-	catchOrFail(pokeExp)
+	prob := catchOrFail(pokeExp)
+	if prob > 40 {
+		fmt.Printf("%s escaped!\n", parameter)
+	} else {
+		fmt.Printf("%s was caught!\n", parameter)
+		myPokedex.RegisterToPokedex(pokeExp, parameter)
+	}
+	return nil
 }
 
-func catchOrFail(baseExp int) {
-	prob := (rand.Intn(baseExp) + 1)
-	if prob >= 50 {
-		fmt.Println("Caught")
-	}
+func checkCommand(cfg *config, parameter string) error {
+	myPokedex.PrintPokedex()
+	return nil
+}
+
+func catchOrFail(baseExp int) int {
+	return (rand.Intn(baseExp) + 1)
 }
 
 func getLocationNames(locationResp api.LocationResponse) []string {

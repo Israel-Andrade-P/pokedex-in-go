@@ -1,6 +1,9 @@
 package pokedex
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 type (
 	Pokedex struct {
@@ -11,13 +14,16 @@ type (
 	}
 )
 
-func newPokedex() Pokedex {
+func NewPokedex() Pokedex {
 	return Pokedex{pokeInfo: make(map[string]Pokemon, 0)}
 }
 
-func printPokedex() {
-	myPokedex := newPokedex()
-	for key, pokemon := range myPokedex.pokeInfo {
-		fmt.Printf("%s: %s", key, pokemon.name)
+func (pokedex *Pokedex) RegisterToPokedex(exp int, name string) {
+	pokedex.pokeInfo[strconv.Itoa(exp)] = Pokemon{name: name}
+}
+
+func (pokedex *Pokedex) PrintPokedex() {
+	for key, pokemon := range pokedex.pokeInfo {
+		fmt.Printf("%s: %s\n", key, pokemon.name)
 	}
 }
