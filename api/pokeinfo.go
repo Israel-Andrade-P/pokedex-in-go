@@ -6,21 +6,38 @@ import (
 )
 
 type (
-	PokeExp struct {
-		BaseExp int `json:"base_experience"`
+	PokeInfo struct {
+		BaseExp int        `json:"base_experience"`
+		Height  int        `json:"height"`
+		Weight  int        `json:"weight"`
+		Types   []TypeInfo `json:"types"`
+		Stats   []StatInfo `json:"stats"`
+	}
+	TypeInfo struct {
+		Type TName `json:"type"`
+	}
+	TName struct {
+		Name string `json:"name"`
+	}
+	StatInfo struct {
+		BaseStat int   `json:"base_stat"`
+		Stat     SName `json:"stat"`
+	}
+	SName struct {
+		Name string `json:"name"`
 	}
 )
 
-func GetPokeInfo(url string) (int, error) {
+func GetPokeInfo(url string) (PokeInfo, error) {
+	var pokeInfo PokeInfo
 	res, err := http.Get(url)
 	if err != nil {
-		return 0, err
+		return pokeInfo, err
 	}
 
-	var exp PokeExp
-	if err = json.NewDecoder(res.Body).Decode(&exp); err != nil {
-		return 0, err
+	if err = json.NewDecoder(res.Body).Decode(&pokeInfo); err != nil {
+		return pokeInfo, err
 	}
 
-	return exp.BaseExp, nil
+	return pokeInfo, nil
 }
