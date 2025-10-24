@@ -55,3 +55,10 @@ func (pokedex *Pokedex) pokePrint(pokeName string) {
 		fmt.Printf("- %s\n", pokeType)
 	}
 }
+
+func (pokedex *Pokedex) DisplayAll() {
+	fmt.Println("Your Pokedex:")
+	for name := range pokedex.pokeInfo {
+		fmt.Printf("- %s\n", name)
+	}
+}

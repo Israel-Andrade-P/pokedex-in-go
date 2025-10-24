@@ -69,6 +69,11 @@ func main() {
 			description: "It will show information about a pokemon if caught it before.\nEx: inspect <pokemon>",
 			callback:    inspectCommand,
 		},
+		"pokedex": {
+			name:        "pokedex",
+			description: "Checks your Pokedex",
+			callback:    pokedexCommand,
+		},
 	}
 
 	cfg := &config{
@@ -264,6 +269,7 @@ func catchCommand(cfg *config, parameter string) error {
 		fmt.Printf("%s escaped!\n", parameter)
 	} else {
 		fmt.Printf("%s was caught!\n", parameter)
+		fmt.Println("You may now inspect it with the inspect command.")
 		stats := make(map[string]int)
 		types := make([]string, 0)
 		for _, statInfo := range pokeInfo.Stats {
@@ -280,6 +286,11 @@ func catchCommand(cfg *config, parameter string) error {
 
 func inspectCommand(cfg *config, parameter string) error {
 	myPokedex.InspectPokemon(parameter)
+	return nil
+}
+
+func pokedexCommand(cfg *config, parameter string) error {
+	myPokedex.DisplayAll()
 	return nil
 }
 
