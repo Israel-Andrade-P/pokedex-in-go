@@ -26,21 +26,32 @@ func (pokedex *Pokedex) RegisterToPokedex(name string, pokemon Pokemon) {
 }
 
 func (pokedex *Pokedex) InspectPokemon(name string) {
-	if pokemon, exists := pokedex.pokeInfo[name]; exists {
-		pokePrint(pokemon)
+	if _, exists := pokedex.pokeInfo[name]; exists {
+		pokedex.pokePrint(name)
 		return
 	}
 	fmt.Println("you have not caught that pokemon")
 }
 
-func pokePrint(pokemon Pokemon) {
-	fmt.Printf("Name: %s\nHeight: %d\nWeight: %d\n", pokemon.Name, pokemon.Height, pokemon.Weight)
-	fmt.Printf("Stats: ")
-	for key, stat := range pokemon.Stats {
-		fmt.Printf("- %s: %d", key, stat)
+func CreatePokemon(name string, height, weight int, stats map[string]int, types []string) Pokemon {
+	return Pokemon{
+		Name:   name,
+		Height: height,
+		Weight: weight,
+		Stats:  stats,
+		Types:  types,
 	}
+}
 
+func (pokedex *Pokedex) pokePrint(pokeName string) {
+	pokemon := pokedex.pokeInfo[pokeName]
+	fmt.Printf("Name: %s\nHeight: %d\nWeight: %d\n", pokemon.Name, pokemon.Height, pokemon.Weight)
+	fmt.Println("Stats:")
+	for key, stat := range pokemon.Stats {
+		fmt.Printf("- %s: %d\n", key, stat)
+	}
+	fmt.Println("Types:")
 	for _, pokeType := range pokemon.Types {
-		fmt.Printf("- %s", pokeType)
+		fmt.Printf("- %s\n", pokeType)
 	}
 }

@@ -64,10 +64,10 @@ func main() {
 			description: "Attempts catching a specific Pokemon.\nEx: catch <pokemon>",
 			callback:    catchCommand,
 		},
-		"check": {
-			name:        "check",
-			description: "Checks Pokedex",
-			callback:    checkCommand,
+		"inspect": {
+			name:        "inspect",
+			description: "It will show information about a pokemon if caught it before.\nEx: inspect <pokemon>",
+			callback:    inspectCommand,
 		},
 	}
 
@@ -242,35 +242,44 @@ func catchCommand(cfg *config, parameter string) error {
 	fmt.Printf("Throwing a pokeball at %s\n", parameter)
 	url := fmt.Sprintf("https://pokeapi.co/api/v2/pokemon/%s", parameter)
 	cachedData, exists := cache.Get(url)
-	var pokeExp int
+	var pokeInfo api.PokeInfo
 	if exists {
-		if err := json.Unmarshal(cachedData, &pokeExp); err != nil {
+		if err := json.Unmarshal(cachedData, &pokeInfo); err != nil {
 			return err
 		}
 	} else {
 		var err error
-		pokeExp, err = api.GetPokeInfo(url)
+		pokeInfo, err = api.GetPokeInfo(url)
 		if err != nil {
 			return err
 		}
-		data, err := json.Marshal(pokeExp)
+		data, err := json.Marshal(pokeInfo)
 		if err != nil {
 			return err
 		}
 		cache.Add(url, data)
 	}
-	prob := catchOrFail(pokeExp)
+	prob := catchOrFail(pokeInfo.BaseExp)
 	if prob > 40 {
 		fmt.Printf("%s escaped!\n", parameter)
 	} else {
 		fmt.Printf("%s was caught!\n", parameter)
-		myPokedex.RegisterToPokedex(pokeExp, parameter)
+		stats := make(map[string]int)
+		types := make([]string, 0)
+		for _, statInfo := range pokeInfo.Stats {
+			stats[statInfo.Stat.Name] = statInfo.BaseStat
+		}
+		for _, typeInfo := range pokeInfo.Types {
+			types = append(types, typeInfo.Type.Name)
+		}
+		pokemon := pokedex.CreatePokemon(parameter, pokeInfo.Height, pokeInfo.Weight, stats, types)
+		myPokedex.RegisterToPokedex(parameter, pokemon)
 	}
 	return nil
 }
 
-func checkCommand(cfg *config, parameter string) error {
-	myPokedex.PrintPokedex()
+func inspectCommand(cfg *config, parameter string) error {
+	myPokedex.InspectPokemon(parameter)
 	return nil
 }
 

@@ -35,6 +35,8 @@ func GetPokeInfo(url string) (PokeInfo, error) {
 		return pokeInfo, err
 	}
 
+	defer res.Body.Close()
+
 	if err = json.NewDecoder(res.Body).Decode(&pokeInfo); err != nil {
 		return pokeInfo, err
 	}
