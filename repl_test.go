@@ -1,6 +1,8 @@
 package main
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestCleanInput(t *testing.T) {
 	cases := []struct {
@@ -28,6 +30,33 @@ func TestCleanInput(t *testing.T) {
 			if word != expectedWord {
 				t.Errorf("Test failed\nExpected Word: %s\nActual Word: %s", expectedWord, word)
 			}
+		}
+	}
+}
+
+func TestCleanParameter(t *testing.T) {
+	cases := []struct {
+		input    []string
+		expected string
+	}{
+		{
+			input:    []string{"cumbuco", "BEACH"},
+			expected: "cumbuco-beach",
+		},
+		{
+			input:    []string{"SAItama"},
+			expected: "saitama",
+		},
+		{
+			input:    []string{"Canoa", "Quebrada", "Beach"},
+			expected: "canoa-quebrada-beach",
+		},
+	}
+
+	for _, c := range cases {
+		actual := cleanParameter(c.input)
+		if actual != c.expected {
+			t.Errorf("Test failed\nExpected string: %s\nActual string: %s", c.expected, actual)
 		}
 	}
 }
