@@ -28,6 +28,11 @@ func GetPokemons(url string) ([]string, error) {
 
 	defer res.Body.Close()
 
+	if res.StatusCode > 299 {
+		fmt.Println("That location doesn't exist!")
+		return []string{}, nil
+	}
+
 	err = json.NewDecoder(res.Body).Decode(&pokemonList)
 	if err != nil {
 		return nil, fmt.Errorf("error has occurred: ERR- invalid %v", err)

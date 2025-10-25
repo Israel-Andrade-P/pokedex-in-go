@@ -17,8 +17,8 @@ type (
 	}
 )
 
-func NewPokedex() Pokedex {
-	return Pokedex{pokeInfo: make(map[string]Pokemon, 0)}
+func NewPokedex() *Pokedex {
+	return &Pokedex{pokeInfo: make(map[string]Pokemon, 0)}
 }
 
 func (pokedex *Pokedex) RegisterToPokedex(name string, pokemon Pokemon) {

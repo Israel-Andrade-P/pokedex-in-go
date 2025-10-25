@@ -24,11 +24,14 @@ type cliCommand struct {
 }
 
 var cache *pokecache.Cache
-var myPokedex pokedex.Pokedex
+var myPokedex *pokedex.Pokedex
 
 func GetCmds() map[string]cliCommand {
-	cache = pokecache.NewCache(time.Second * 10)
-	myPokedex = pokedex.NewPokedex()
+	if cache == nil && myPokedex == nil {
+		cache = pokecache.NewCache(time.Second * 10)
+		myPokedex = pokedex.NewPokedex()
+	}
+
 	return map[string]cliCommand{
 		"exit": {
 			name:        "exit",
@@ -184,6 +187,9 @@ func exploreCommand(cfg *config, parameter string) error {
 		}
 		cache.Add(url, data)
 	}
+	if pokeNames == nil {
+		return nil
+	}
 
 	for _, name := range pokeNames {
 		fmt.Println(name)
@@ -211,6 +217,9 @@ func catchCommand(cfg *config, parameter string) error {
 			return err
 		}
 		cache.Add(url, data)
+	}
+	if pokeInfo.BaseExp == 0 {
+		return nil
 	}
 	prob := catchOrFail(pokeInfo.BaseExp)
 	if prob > 40 {

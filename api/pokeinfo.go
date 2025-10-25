@@ -2,6 +2,8 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -32,7 +34,13 @@ func GetPokeInfo(url string) (PokeInfo, error) {
 	var pokeInfo PokeInfo
 	res, err := http.Get(url)
 	if err != nil {
+		log.Println("Error inside Get request attempt")
 		return pokeInfo, err
+	}
+
+	if res.StatusCode > 299 {
+		fmt.Println("That Pokemon doesn't exist!")
+		return pokeInfo, nil
 	}
 
 	defer res.Body.Close()
